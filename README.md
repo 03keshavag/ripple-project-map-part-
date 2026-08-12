@@ -1,4 +1,4 @@
-# Ripple — Kindness Map & Discovery (Keshava's scope)
+# Ripple — Kindness Map & Discovery 
 
 Standalone React + Vite + Tailwind demo of the **Kindness Map**, **Discovery**
 list, and the **"I Want to Ripple"** entry point — built on **mock data** so it
