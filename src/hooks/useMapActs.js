@@ -17,7 +17,11 @@ export function useMapActs() {
       const data = await getMapActs();
       setActs(data);
     } catch (err) {
-      setError(err.message || 'Something went wrong while loading stories.');
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.error('[useMapActs] Failed to load acts:', err);
+      }
+      setError('Unable to load acts right now. Please try again.');
       setActs([]);
     } finally {
       setLoading(false);

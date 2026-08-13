@@ -1,12 +1,26 @@
 import { getCategoryColor } from '../constants/categories';
 
+/** Formats an ISO date into a short readable label; null when missing/invalid. */
+function formatDate(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
 /**
  * StoryPopup — content shown inside a map marker's popup.
- * Pure presentational component: title, category badge, short summary, and
- * the "I Want to Ripple" call-to-action.
+ * Pure presentational component: category badge, title, summary, city,
+ * people impacted, created date (when available), and the "I Want to Ripple"
+ * call-to-action. Styled to match the rest of the Ripple UI.
  */
 export default function StoryPopup({ act, onRipple }) {
   const color = getCategoryColor(act.category);
+  const createdDate = formatDate(act.createdAt);
 
   return (
     <div className="p-4">
@@ -24,6 +38,24 @@ export default function StoryPopup({ act, onRipple }) {
       <p className="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
         {act.summary}
       </p>
+
+      {act.city && (
+        <p className="mt-2 flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+          <span aria-hidden="true">📍</span> {act.city}
+        </p>
+      )}
+
+      {typeof act.peopleImpacted === 'number' && (
+        <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+          People impacted: {act.peopleImpacted}
+        </p>
+      )}
+
+      {createdDate && (
+        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+          {createdDate}
+        </p>
+      )}
 
       <p className="mt-2 text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
         Approximate location only

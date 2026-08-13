@@ -9,6 +9,16 @@
 export const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA !== 'false';
 
 /**
+ * Base URL of the Ripple backend.
+ *
+ * Configurable via VITE_API_BASE_URL so the frontend can point at any
+ * deployed backend without touching source code (e.g. for the cross-laptop
+ * demo). Defaults to the local backend for day-to-day development.
+ */
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
+/**
  * Demo city center used to centre the Kindness Map (Bengaluru, India).
  * NOTE: this is only the *map viewport* centre — it is never a marker.
  */

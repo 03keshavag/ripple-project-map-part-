@@ -1,7 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMapActs } from '../hooks/useMapActs';
-import { CATEGORIES } from '../constants/categories';
+import {
+  CATEGORIES,
+  CATEGORY_MAP,
+  getCategoryColor,
+} from '../constants/categories';
 import KindnessMap from '../components/KindnessMap';
 import DiscoveryList from '../components/DiscoveryList';
 import CategoryFilter from '../components/CategoryFilter';
@@ -10,6 +14,23 @@ import EmptyState from '../components/EmptyState';
 import ThemeToggle from '../components/ThemeToggle';
 
 const VIEWS = ['map', 'discovery'];
+
+/**
+ * Builds the category list shown in the filter dynamically from the acts that
+ * actually came back from the API (so new/unknown categories appear without
+ * code changes). Known MIL categories keep their familiar order & colour;
+ * any extras are appended with their derived colour.
+ */
+function getAvailableCategories(acts) {
+  const presentIds = [
+    ...new Set(acts.map((act) => act?.category).filter(Boolean)),
+  ];
+  const known = CATEGORIES.filter((c) => presentIds.includes(c.id));
+  const extras = presentIds
+    .filter((id) => !CATEGORY_MAP[id])
+    .map((id) => ({ id, label: id, color: getCategoryColor(id) }));
+  return [...known, ...extras];
+}
 
 /**
  * HomePage — the Kindness Map & Discovery screen.
@@ -25,12 +46,16 @@ export default function HomePage() {
   const [view, setView] = useState('map');
   const navigate = useNavigate();
 
-  // Client-side filtering of the same mock data (no backend filtering yet).
+  // Client-side filtering of the same data (no backend filtering yet).
   // Empty selection = "show everything".
   const filteredActs = useMemo(() => {
     if (activeCategories.length === 0) return acts;
     return acts.filter((act) => activeCategories.includes(act.category));
   }, [acts, activeCategories]);
+
+  // Filter chips are derived from the acts actually returned by the API so
+  // categories stay in sync with the (live) data source.
+  const availableCategories = useMemo(() => getAvailableCategories(acts), [acts]);
 
   const handleRipple = (act) => {
     // Stub navigation to Nitya's challenge screen. The real screen is not
@@ -90,7 +115,7 @@ export default function HomePage() {
         {/* Category filter chips — applied to BOTH views from the same state */}
         <section className="mb-4">
           <CategoryFilter
-            categories={CATEGORIES}
+            categories={availableCategories}
             active={activeCategories}
             onToggle={toggleCategory}
           />
@@ -102,18 +127,26 @@ export default function HomePage() {
             <LoadingState message="Loading kindness stories…" />
           ) : error ? (
             <EmptyState
-              title="Couldn’t load stories"
-              message={error}
-              actionLabel="Try again"
+              title="Unable to load acts right now"
+              message="Please try again in a moment. The acts of kindness are still out there!"
+              actionLabel="Retry"
               onAction={reload}
             />
           ) : filteredActs.length === 0 ? (
-            <EmptyState
-              title="No stories match those filters"
-              message="Try clearing a category or two to see more acts of kindness."
-              actionLabel="Clear filters"
-              onAction={() => setActiveCategories([])}
-            />
+            activeCategories.length > 0 ? (
+              <EmptyState
+                title="No stories match those filters"
+                message="Try clearing a category or two to see more acts of kindness."
+                actionLabel="Clear filters"
+                onAction={() => setActiveCategories([])}
+              />
+            ) : (
+              <EmptyState
+                title="No acts on the map yet"
+                message="Be the first to share a ripple of kindness here."
+                emoji="🌱"
+              />
+            )
           ) : view === 'map' ? (
             <KindnessMap
               acts={filteredActs}

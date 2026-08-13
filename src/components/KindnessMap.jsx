@@ -29,11 +29,29 @@ function createPinIcon(category) {
 }
 
 /**
+ * Only records with finite numeric coordinates can become a Leaflet marker.
+ * This defensive check runs at render time so an unexpected bad record can
+ * never crash the whole map — it is skipped instead.
+ */
+function isValidMarker(act) {
+  return (
+    act &&
+    typeof act.latitudeApprox === 'number' &&
+    Number.isFinite(act.latitudeApprox) &&
+    typeof act.longitudeApprox === 'number' &&
+    Number.isFinite(act.longitudeApprox)
+  );
+}
+
+/**
  * KindnessMap — a pure presentational Leaflet map.
  * Receives the (already filtered) acts as props and renders one marker each.
+ * Acts with invalid coordinates are filtered out defensively.
  * Clicking a marker opens a StoryPopup with the "I Want to Ripple" action.
  */
 export default function KindnessMap({ acts, onRipple, className = '' }) {
+  const markers = acts.filter(isValidMarker);
+
   return (
     <MapContainer
       center={[DEMO_CENTER.lat, DEMO_CENTER.lng]}
@@ -46,7 +64,7 @@ export default function KindnessMap({ acts, onRipple, className = '' }) {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {acts.map((act) => (
+      {markers.map((act) => (
         <Marker
           key={act.id}
           position={[act.latitudeApprox, act.longitudeApprox]}
